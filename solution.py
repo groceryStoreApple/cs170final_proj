@@ -21,9 +21,14 @@ def construct_graph():
 			if int(line[j]):
 				G.add_edge(i-2,j)
 	f.close()
-
 	return G
 
+def find_all_cycle(graph):
+	graph_gen = nx.simple_cycles(graph)
+	while (1):
+		cycle = graph_gen.next()
+		if len(cycle) <6:
+			print cycle
 def main():
 	g = construct_graph()
 
