@@ -36,20 +36,26 @@ def find_unique_cycle(cycles):
 	for i in range(0, len(cycles)):
 		if not unique[i]:
 			continue
-		for j in range(i+1, len(cycles)):
+		for j in range(0, len(cycles)):
+			if i == j:
+				continue
 			if list(set(cycles[i]) & set(cycles[j])):
 				unique[i] = False
 				unique[j] = False
 		if unique[i]:
 			unique_cycles.append(cycles[i])
+	remain_cycles = [c for i, c in enumerate(cycles) if not unique[i]]
 	print unique_cycles
-	return unique_cycles
+	print remain_cycles
+	return unique_cycles, remain_cycles
+
 
 
 def main():
 	# g = construct_graph()
 	# find_all_cycle(g)
-	
+
+	cycles = [[5, 2], [2, 5], [2, 6], [8, 4]]
 	find_unique_cycle(cycles)
 
 
