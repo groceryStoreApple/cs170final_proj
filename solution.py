@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 
 def construct_graph():
-	f = open("test_instance")
+	f = open("test.in")
 	G = nx.DiGraph()
 	content = [line.rstrip('\n') for line in f]
 	num_of_lines = len(content)
@@ -29,8 +29,29 @@ def find_all_cycle(graph):
 		cycle = graph_gen.next()
 		if len(cycle) <6:
 			print cycle
+
+def find_unique_cycle(cycles):
+	unique_cycles = []
+	unique = [True] * len(cycles)
+	for i in range(0, len(cycles)):
+		if not unique[i]:
+			continue
+		for j in range(i+1, len(cycles)):
+			if list(set(cycles[i]) & set(cycles[j])):
+				unique[i] = False
+				unique[j] = False
+		if unique[i]:
+			unique_cycles.append(cycles[i])
+	print unique_cycles
+	return unique_cycles
+
+
 def main():
-	g = construct_graph()
+	# g = construct_graph()
+	# find_all_cycle(g)
+	
+	find_unique_cycle(cycles)
+
 
 if __name__ == "__main__":
 	main()
