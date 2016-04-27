@@ -24,11 +24,31 @@ def construct_graph():
 	return G
 
 def find_all_cycle(graph):
-	graph_gen = nx.simple_cycles(graph)
-	while (1):
-		cycle = graph_gen.next()
-		if len(cycle) <6:
-			print cycle
+	vertices = graph.nodes()
+	cycles = []
+	for vertex in vertices:
+		cycle = find_cycle(graph,vertex,vertex,5)
+		print cycle
+		cycles += cycle
+	print len(cycles)
+
+def find_cycle(graph, start, end, depth, path=[]):
+	if depth == 0:
+		return None
+	path = path + [start]
+	paths = []
+	for v in nx.all_neighbors(graph,start):
+		if v == end:
+			paths.append(path)
+		elif v not in path:
+			newpaths = find_cycle(graph,v,end,depth-1,path)
+			if newpaths:
+				paths += newpaths
+	return paths
+
+
+
+
 def main():
 	g = construct_graph()
 
