@@ -1,6 +1,8 @@
 import networkx as nx
+import numpy as np
 import matplotlib.pyplot as plt
 import tarjan as tj
+
 
 def construct_graph(instance_name):
 	f = open(instance_name)
@@ -18,7 +20,6 @@ def construct_graph(instance_name):
 			except:
 				continue
 			G.node[c]['child'] = True
-
 	for i in range(2,num_of_lines):
 		line = content[i].split(' ')
 		for j in range(len(line)):
@@ -113,10 +114,6 @@ def tarjan_algo(graph):
 		graph.remove_nodes_from(scc)
 	return graph, solution_set, largest_scc_size
 
-
-
-
-
 def find_all_children_cycle(graph):
 	vertices = graph.nodes()
 	cycles = []
@@ -124,8 +121,8 @@ def find_all_children_cycle(graph):
 		if graph.node[vertex]['child']:
 			cycle = find_one_cycle(graph,vertex,vertex,5)
 			if cycle:
-				print cycle
-				cycles += cycle
+				# print cycle
+				cycles.append(cycle)
 	return cycles
 
 def find_one_cycle_length_five(graph,start,end,depth,path=[]):
@@ -169,7 +166,7 @@ def find_cycle(graph, start, end, depth, path=[]):
 				paths += newpaths
 	return paths
 
-def find_unique_cycle(cycles):
+def find_unique_cycle(cycles, k):
 	unique_cycles = []
 	remain_cycles = []
 	unique = [True] * len(cycles)
@@ -180,7 +177,7 @@ def find_unique_cycle(cycles):
 		for j in range(0, len(cycles)):
 			if i == j:
 				continue
-			if list(set(cycles[i]) & set(cycles[j])):
+			if len(list(set(cycles[i]) & set(cycles[j]))) > k:
 				unique[i] = False
 				unique[j] = False
 		if unique[i]:
@@ -190,6 +187,26 @@ def find_unique_cycle(cycles):
 	# print unique_cycles
 	# print remain_cycles
 	return unique_cycles, remain_cycles
+
+def delete_duplicate_cycle(cycles):
+	canonical_cycles = []
+	for c in cycles:
+		min_index = c.index(min(c))
+		canonical_c = c[min_index:] + c[:min_index]
+		canonical_cycles.append(canonical_c)
+	unique_cycles = []
+	unique = [True] * len(canonical_cycles)
+	for i in range(0, len(canonical_cycles)):
+		if not unique[i]:
+			continue
+		for j in range(0, len(canonical_cycles)):
+			if i == j:
+				continue
+			if np.array_equal(canonical_cycles[i], canonical_cycles[j]):
+				unique[j] = False
+		if unique[i]:
+			unique_cycles.append(canonical_cycles[i])
+	return unique_cycles
 
 def delete_cycle(G, cycles):
 	G.remove_nodes_from(cycles)
@@ -204,15 +221,11 @@ def delete_cycle(G, cycles):
 # 		G = delete_cycle(G, c)
 # 	for i,c in enumerate(remain_cycles):
 
-
-
 def main():
-	print "lol"
-	# g = construct_graph()
-	# # naive_greedy(g)
-	# print(nx.number_of_edges(g))
-
-	# find_all_cycle(g)
+	g = construct_graph("instances/10.in")
+	new_g, sccs, size = scc_screening(g, [])
+	cycles = find_all_children_cycle(new_g)
+	new_cycles = delete_duplicate_cycle(cycles)
 
 if __name__ == "__main__":
 	main()
