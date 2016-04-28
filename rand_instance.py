@@ -1,11 +1,11 @@
 
 import numpy as np
 def main():
-	rand_inst_generator("test_instance")
+	rand_inst_generator("small_instance.in")
 
 def rand_inst_generator(filename):
 	string = ""
-	n = np.random.randint(10,30)
+	n = np.random.randint(10,15)
 	string += str(n) + "\n"
 	string += child_random(n)
 	for i in range(n):

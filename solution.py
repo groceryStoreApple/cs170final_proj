@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 
 def construct_graph():
-	f = open("test.in")
+	f = open("small_instance.in")
 	G = nx.DiGraph()
 	content = [line.rstrip('\n') for line in f]
 	num_of_lines = len(content)
@@ -21,20 +21,30 @@ def construct_graph():
 			if int(line[j]):
 				G.add_edge(i-2,j)
 	f.close()
+	# G.draw()
 	return G
 
 def find_all_cycle(graph):
 	graph_gen = nx.simple_cycles(graph)
+	cycles = []
 	while (1):
-		cycle = graph_gen.next()
+		try:
+			cycle = graph_gen.next()
+		except:
+			break
 		if len(cycle) <6:
-			print cycle
+			cycles.append(cycle)
+			# print cycle
+	print(len(cycles))
+	return cycles
 
 def find_unique_cycle(cycles):
 	unique_cycles = []
+	remain_cycles = []
 	unique = [True] * len(cycles)
 	for i in range(0, len(cycles)):
 		if not unique[i]:
+			remain_cycles.append(cycles[i])
 			continue
 		for j in range(0, len(cycles)):
 			if i == j:
@@ -44,19 +54,29 @@ def find_unique_cycle(cycles):
 				unique[j] = False
 		if unique[i]:
 			unique_cycles.append(cycles[i])
-	remain_cycles = [c for i, c in enumerate(cycles) if not unique[i]]
-	print unique_cycles
-	print remain_cycles
+		else:
+			remain_cycles.append(cycles[i])
+	# print unique_cycles
+	# print remain_cycles
 	return unique_cycles, remain_cycles
 
+def delete_cycle(G, cycles):
+	G.remove_nodes_from(cycles)
+	return G
 
+def naive_greedy(G):
+	donation_chain = []
+	cycles = find_all_cycle(G)
+	unique_cycles, remain_cycles = find_unique_cycle(cycles)
+	for c in unique_cycles:
+		donation_chain.append(c)
+		G = delete_cycle(G, c)
+	for i,c in enumerate(remain_cycles):
+		
 
 def main():
-	# g = construct_graph()
-	# find_all_cycle(g)
-
-	cycles = [[5, 2], [2, 5], [2, 6], [8, 4]]
-	find_unique_cycle(cycles)
+	g = construct_graph()
+	naive_greedy(g)
 
 
 if __name__ == "__main__":
