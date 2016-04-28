@@ -51,7 +51,16 @@ def solve_all():
 def instance_solver(graph):
 	solution_set = []
 	graph,solution_set,largest_scc_size = scc_screening(graph,solution_set)
-	# children_cycles = find_all_children_cycle(graph)
+	children_cycles = find_all_children_cycle(graph)
+	children_cycles = delete_duplicate_cycle(children_cycles)
+	children_cycles,_ = find_unique_cycle(children_cycles,0)
+	print "children_cycles are " 
+	print children_cycles
+	for cycle in children_cycles:
+		if cycle:
+			solution_set.append(cycle)
+			for item in cycle:
+				graph.remove_node(item)
 
 	while largest_scc_size>5:
 		graph_copy = graph.copy()
@@ -77,6 +86,7 @@ def instance_solver(graph):
 		if largest_scc_size == last_largest_scc_size:
 			break
 	print "number of vertices uncovered" + str(len(graph.nodes()))
+	
 
 	return solution_set
 
