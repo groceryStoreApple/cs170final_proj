@@ -1,15 +1,20 @@
 import networkx as nx
+import numpy as np
 import matplotlib.pyplot as plt
 
 
 def construct_graph():
-	f = open("instances/100.in")
+	f = open("instances/20.in")
 	G = nx.DiGraph()
 	temp_content = [line.rstrip('\n') for line in f]
 	content = []
 	for line in temp_content:
-		if line[-1] == " ":
+		while line[-1] == " ":
 			line = line[:-1]
+		# if line[-1] == " ":
+		# 	line = line[:-1]
+		# if line[-1] == "":
+		# 	line = line[:-1]
 		content.append(line)
 	num_of_lines = len(content)
 	num_of_vertex = int(content[0])
@@ -17,15 +22,19 @@ def construct_graph():
 		G.add_node(i,child = False)
 	children = content[1].split(' ')
 	for child in children:
-		print(child)
-		c = int(child)
+		try:
+			c = int(child)
+		except:
+			continue
 		G.node[c]['child'] = True
-
 	for i in range(2,num_of_lines):
 		line = content[i].split(' ')
 		for j in range(len(line)):
-			if int(line[j]):
-				G.add_edge(i-2,j)
+			try:
+				if int(line[j]):
+					G.add_edge(i-2,j)
+			except:
+				continue
 	f.close()
 	# G.draw()
 	return G
@@ -73,7 +82,7 @@ def find_cycle(graph, start, end, depth, path=[]):
 				paths += newpaths
 	return paths
 
-def find_unique_cycle(cycles):
+def find_unique_cycle(cycles, k):
 	unique_cycles = []
 	remain_cycles = []
 	unique = [True] * len(cycles)
@@ -84,7 +93,7 @@ def find_unique_cycle(cycles):
 		for j in range(0, len(cycles)):
 			if i == j:
 				continue
-			if list(set(cycles[i]) & set(cycles[j])):
+			if len(list(set(cycles[i]) & set(cycles[j]))) > k:
 				unique[i] = False
 				unique[j] = False
 		if unique[i]:
@@ -94,6 +103,27 @@ def find_unique_cycle(cycles):
 	# print unique_cycles
 	# print remain_cycles
 	return unique_cycles, remain_cycles
+
+def delete_duplicate_cycle(cycles):
+	canonical_cycles = []
+	for c in cycles:
+		min_index = c.index(min(c))
+		canonical_c = c[min_index:] + c[:min_index]
+		canonical_cycles.append(canonical_c)
+	unique_cycles = []
+	unique = [True] * len(canonical_cycles)
+	for i in range(0, len(canonical_cycles)):
+		if not unique[i]:
+			continue
+		for j in range(0, len(canonical_cycles)):
+			if i == j:
+				continue
+			if np.array_equal(canonical_cycles[i], canonical_cycles[j]):
+				unique[j] = False
+		if unique[i]:
+			unique_cycles.append(canonical_cycles[i])
+			print(canonical_cycles[i])
+	return unique_cycles
 
 def delete_cycle(G, cycles):
 	G.remove_nodes_from(cycles)
@@ -107,8 +137,6 @@ def delete_cycle(G, cycles):
 # 		donation_chain.append(c)
 # 		G = delete_cycle(G, c)
 # 	for i,c in enumerate(remain_cycles):
-
-
 
 def main():
 	g = construct_graph()
