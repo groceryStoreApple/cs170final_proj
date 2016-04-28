@@ -55,19 +55,28 @@ def instance_solver(graph):
 	while largest_scc_size>5:
 		graph_copy = graph.copy()
 		most_constricted_vertex = find_most_constricted(graph_copy)
+		if most_constricted_vertex == -1:
+			break
+
 		cycle = find_one_cycle_length_five(graph,most_constricted_vertex,most_constricted_vertex,5)
 		
 		while not cycle:
 			graph_copy.remove_node(most_constricted_vertex)
 			most_constricted_vertex = find_most_constricted(graph_copy)
+			if most_constricted_vertex == -1:
+				break
 			cycle = find_one_cycle_length_five(graph,most_constricted_vertex,most_constricted_vertex,5)
-		
-		print cycle
-		solution_set.append(cycle)
-		graph.remove_nodes_from(cycle)
+		if cycle:
+			print cycle
+			solution_set.append(cycle)
+			graph.remove_nodes_from(cycle)
+		last_largest_scc_size = largest_scc_size
 		graph,solution_set,largest_scc_size = scc_screening(graph,solution_set)
+		
+		if largest_scc_size == last_largest_scc_size:
+			break
+	print "number of vertices uncovered" + str(len(graph.nodes()))
 
-	print "number of vertices uncovered" + str(graph.nodes())
 	return solution_set
 
 def find_most_constricted(graph):
