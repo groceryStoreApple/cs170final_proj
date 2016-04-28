@@ -1,9 +1,9 @@
 import networkx as nx
 import matplotlib.pyplot as plt
+import tarjan as tj
 
-
-def construct_graph():
-	f = open("test.in")
+def construct_graph(instance_name):
+	f = open(instance_name)
 	G = nx.DiGraph()
 	content = [line.rstrip('\n') for line in f]
 	num_of_lines = len(content)
@@ -22,6 +22,25 @@ def construct_graph():
 				G.add_edge(i-2,j)
 	f.close()
 	return G
+
+def construct_graph_for_tarjan(graph):
+	result = {}
+	num_of_vertex = 0
+	for v in nx.nodes(graph):
+		result[v] = nx.all_neighbors(graph,v)
+		num_of_vertex += 1
+	print "there are " +str(num_of_vertex) + "vertices"
+	return result
+
+def tarjan_algo(graph):
+	print tj.tarjan(graph)
+
+def find_all_scc():
+	for i in range(1,492):
+		filename = "phase1-processed/"+str(i)+".in"
+		g = construct_graph(filename)
+		dict = construct_graph_for_tarjan(g)
+		tarjan_algo(dict)
 
 def find_all_cycle(graph):
 	# graph_gen = nx.simple_cycles(graph)
