@@ -68,6 +68,8 @@ def instance_solver(graph):
 		graph.remove_nodes_from(cycle)
 		graph,solution_set,largest_scc_size = scc_screening(graph,solution_set)
 
+	print("largest scc left"+str(largest_scc_size))
+
 	print "number of vertices uncovered" + str(graph.nodes())
 	return solution_set
 
@@ -213,10 +215,20 @@ def delete_cycle(G, cycles):
 # 	for i,c in enumerate(remain_cycles):
 
 def main():
-	g = construct_graph("instances/10.in")
-	new_g, sccs, size = scc_screening(g, [])
-	cycles = find_all_children_cycle(new_g)
-	new_cycles = delete_duplicate_cycle(cycles)
+	# g = construct_graph("instances/1.in")
+	# new_g, sccs, size = scc_screening(g, [])
+	# cycles = find_all_children_cycle(new_g)
+	# print(cycles)
+	# cycles = delete_duplicate_cycle(cycles)
+	# print(cycles)
+	# unqiue, remain = find_unique_cycle(cycles, 0)
+	# print(unqiue)
+	# for i in range(1,492):
+	# 	filename = "phase1-processed/"+str(i)+".in"
+	# 	print filename
+	# 	g = construct_graph(filename)
+	solve_all()
+		
 
 if __name__ == "__main__":
 	main()
