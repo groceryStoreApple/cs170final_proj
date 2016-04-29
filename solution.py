@@ -2,6 +2,7 @@ import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
 import tarjan as tj
+import heapq
 
 
 def construct_graph(instance_name):
@@ -63,19 +64,7 @@ def instance_solver(graph):
 				graph.remove_node(item)
 
 	while largest_scc_size>5:
-		graph_copy = graph.copy()
-		most_constricted_vertex = find_most_constricted(graph_copy)
-		if most_constricted_vertex == -1:
-			break
-
-		cycle = find_one_cycle_length_five(graph,most_constricted_vertex,most_constricted_vertex,5)
-		
-		while not cycle:
-			graph_copy.remove_node(most_constricted_vertex)
-			most_constricted_vertex = find_most_constricted(graph_copy)
-			if most_constricted_vertex == -1:
-				break
-			cycle = find_one_cycle_length_five(graph,most_constricted_vertex,most_constricted_vertex,5)
+		cycle = one_cycle_from_most_constricted(graph)
 		if cycle:
 			print cycle
 			solution_set.append(cycle)
@@ -83,6 +72,7 @@ def instance_solver(graph):
 		last_largest_scc_size = largest_scc_size
 		graph,solution_set,largest_scc_size = scc_screening(graph,solution_set)
 		
+		print "number of vertices uncovered " + str(len(graph.nodes()))
 		if largest_scc_size == last_largest_scc_size:
 			break
 
@@ -91,19 +81,30 @@ def instance_solver(graph):
 
 	return solution_set
 
-def find_most_constricted(graph):
-	most_constricted = -1
-	smallest_in_degree = 999999999
+def one_cycle_from_most_constricted(graph):
+	pq = sort_v_according_to_indegree(graph)
+	cycle = None
+	while not cycle:
+		if not pq.is_empty():
+			curr_v = pq.pop()
+			cycle = find_one_cycle_length_five(graph,curr_v,curr_v,5)
+		else:
+			print "not more vertices"
+			return cycle
+	return cycle
+
+def sort_v_according_to_indegree(graph):
+	pq = PriorityQueue()
 	for v in graph.nodes():
 		in_degree = graph.in_degree(v)
-		if in_degree < smallest_in_degree:
-			smallest_in_degree = in_degree
-			most_constricted = v
-	return most_constricted
+		pq.push(v,-in_degree)
+	return pq
 
 def scc_screening(graph,solution_set):
-	graph, new_solution, largest_scc_size = tarjan_algo(graph)
-	solution_set.append(new_solution)
+	graph, new_solutions, largest_scc_size = tarjan_algo(graph)
+	if new_solutions:
+		for new_solution in new_solutions:
+			solution_set.append(new_solution)
 	print("#scc " + str(len(graph)))
 	return graph, solution_set,largest_scc_size
 
@@ -124,6 +125,8 @@ def tarjan_algo(graph):
 		graph.remove_node(person)
 	for scc in solution_set:
 		graph.remove_nodes_from(scc)
+	if solution_set:
+		print "solutions from tarjan screening" + str(solution_set)
 	return graph, solution_set, largest_scc_size
 
 def find_all_children_cycle(graph):
@@ -164,9 +167,9 @@ def find_one_cycle(graph, start, end, depth,path=[]):
 		return None
 	path = path + [start]
 	for v in nx.all_neighbors(graph,start):
-		if not graph.node[v]['child']:
-			continue
-		elif v == end:
+		# if not graph.node[v]['child']:
+		# 	continue
+		if v == end:
 			return path
 		elif v not in path:
 			return find_one_cycle(graph,v,end,depth-1,path)
@@ -260,8 +263,14 @@ def main():
 	g = construct_graph("instances/1.in")
 	print nx.number_of_edges(g)
 	# nx.draw(g)
-	naive_greedy(g)
-	# instance_solver(g)
+	# naive_greedy(g)
+	solutions =  instance_solver(g)
+	ver = set()
+	for sol in solutions:
+		if sol:
+			for v in sol:
+				ver.add(v)
+	print len(ver)
 	# new_g, sccs, size = scc_screening(g, [])
 	# cycles = find_all_children_cycle(new_g)
 	# print(cycles)
@@ -275,6 +284,23 @@ def main():
 	# 	g = construct_graph(filename)
 	# solve_all()
 		
+
+class PriorityQueue:
+    def __init__(self):
+        self._queue = []
+        self._index = 0
+
+    def is_empty(self):
+    	return len(self._queue) == 0
+
+    def push(self, item, priority):
+        heapq.heappush(self._queue, (-priority, self._index, item))
+        self._index += 1
+
+    def pop(self):
+        return heapq.heappop(self._queue)[-1]
+
+
 
 if __name__ == "__main__":
 	main()
