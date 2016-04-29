@@ -51,26 +51,44 @@ def solve_all():
 def instance_solver(graph):
 	solution_set = []
 	graph,solution_set,largest_scc_size = scc_screening(graph,solution_set)
-	# children_cycles = find_all_children_cycle(graph)
+	children_cycles = find_all_children_cycle(graph)
+	children_cycles = delete_duplicate_cycle(children_cycles)
+	children_cycles,_ = find_unique_cycle(children_cycles,0)
+	print "children_cycles are " 
+	print children_cycles
+	for cycle in children_cycles:
+		if cycle:
+			solution_set.append(cycle)
+			for item in cycle:
+				graph.remove_node(item)
 
 	while largest_scc_size>5:
 		graph_copy = graph.copy()
 		most_constricted_vertex = find_most_constricted(graph_copy)
+		if most_constricted_vertex == -1:
+			break
+
 		cycle = find_one_cycle_length_five(graph,most_constricted_vertex,most_constricted_vertex,5)
 		
 		while not cycle:
 			graph_copy.remove_node(most_constricted_vertex)
 			most_constricted_vertex = find_most_constricted(graph_copy)
+			if most_constricted_vertex == -1:
+				break
 			cycle = find_one_cycle_length_five(graph,most_constricted_vertex,most_constricted_vertex,5)
-		
-		print cycle
-		solution_set.append(cycle)
-		graph.remove_nodes_from(cycle)
+		if cycle:
+			print cycle
+			solution_set.append(cycle)
+			graph.remove_nodes_from(cycle)
+		last_largest_scc_size = largest_scc_size
 		graph,solution_set,largest_scc_size = scc_screening(graph,solution_set)
+		
+		if largest_scc_size == last_largest_scc_size:
+			break
 
-	print("largest scc left"+str(largest_scc_size))
+	print("largest scc left "+str(largest_scc_size))
+	print "number of vertices uncovered " + str(len(graph.nodes()))
 
-	print "number of vertices uncovered" + str(graph.nodes())
 	return solution_set
 
 def find_most_constricted(graph):
@@ -86,6 +104,7 @@ def find_most_constricted(graph):
 def scc_screening(graph,solution_set):
 	graph, new_solution, largest_scc_size = tarjan_algo(graph)
 	solution_set.append(new_solution)
+	print("#scc " + str(len(graph)))
 	return graph, solution_set,largest_scc_size
 
 def tarjan_algo(graph):
@@ -116,6 +135,16 @@ def find_all_children_cycle(graph):
 			if cycle:
 				# print cycle
 				cycles.append(cycle)
+	return cycles
+
+def find_all_cycle(graph):
+	vertices = graph.nodes()
+	cycles = []
+	for vertex in vertices:
+		cycle = find_one_cycle(graph,vertex,vertex,5)
+		if cycle:
+			print cycle
+			cycles.append(cycle)
 	return cycles
 
 def find_one_cycle_length_five(graph,start,end,depth,path=[]):
@@ -205,17 +234,34 @@ def delete_cycle(G, cycles):
 	G.remove_nodes_from(cycles)
 	return G
 
-# def naive_greedy(G):
-# 	donation_chain = []
-# 	cycles = find_all_cycle(G)
-# 	unique_cycles, remain_cycles = find_unique_cycle(cycles)
-# 	for c in unique_cycles:
-# 		donation_chain.append(c)
-# 		G = delete_cycle(G, c)
-# 	for i,c in enumerate(remain_cycles):
+def naive_greedy(graph):
+	solution_set = []
+	graph,solution_set,largest_scc_size = scc_screening(graph,solution_set)
+	children_cycles = find_all_children_cycle(graph)
+	children_cycles = delete_duplicate_cycle(children_cycles)
+	children_cycles,_ = find_unique_cycle(children_cycles,0)
+	print "children_cycles are " 
+	print children_cycles
+	for cycle in children_cycles:
+		if cycle:
+			solution_set.append(cycle)
+			for item in cycle:
+				graph.remove_node(item)
+	
+	cycles = find_all_cycle(graph)
+	# unique_cycles, remain_cycles = find_unique_cycle(cycles)
+	# for c in unique_cycles:
+	# 	donation_chain.append(c)
+	# 	G = delete_cycle(G, c)
+	# for i,c in enumerate(remain_cycles):
+	# 	return
 
 def main():
-	# g = construct_graph("instances/1.in")
+	g = construct_graph("instances/1.in")
+	print nx.number_of_edges(g)
+	# nx.draw(g)
+	naive_greedy(g)
+	# instance_solver(g)
 	# new_g, sccs, size = scc_screening(g, [])
 	# cycles = find_all_children_cycle(new_g)
 	# print(cycles)
@@ -227,7 +273,7 @@ def main():
 	# 	filename = "phase1-processed/"+str(i)+".in"
 	# 	print filename
 	# 	g = construct_graph(filename)
-	solve_all()
+	# solve_all()
 		
 
 if __name__ == "__main__":
