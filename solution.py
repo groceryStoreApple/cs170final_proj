@@ -260,8 +260,8 @@ def naive_greedy(graph):
 	# 	return
 
 def main():
-	solve_all()
-	# g = construct_graph("instances/1.in")
+	# solve_all()
+	g = construct_graph("instances/1.in")
 	# print nx.number_of_edges(g)
 	# nx.draw(g)
 	# naive_greedy(g)
@@ -284,7 +284,7 @@ def main():
 	# 	filename = "phase1-processed/"+str(i)+".in"
 	# 	print filename
 	# 	g = construct_graph(filename)
-	# instance_solver(g)
+	instance_solver(g)
 		
 
 class PriorityQueue:
