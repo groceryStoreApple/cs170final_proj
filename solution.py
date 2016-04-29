@@ -33,6 +33,26 @@ def construct_graph(instance_name):
 	f.close()
 	return G
 
+def output(solution,inst_num,flag):
+	print inst_num,flag
+	if flag == 1:
+		filename = "complete/inst" + str(inst_num)+".out"
+		output_func(solution,filename)
+	if flag == 2:
+		filename = "partial/inst" + str(inst_num)+".out"
+		output_func(solution,filename)
+
+def output_func(solution,filename):
+	f = open(filename, 'w')
+	for s in solution:
+		string = ""
+		for num in s:
+			string += str(num) + " "
+		string = string[:-1]
+		string += "\n"
+		f.write(string)
+	f.close()
+
 def cycle_checker(graph, cycle):
 	cycle_len = len(cycle)
 	for i in range(cycle_len-1):
@@ -54,15 +74,30 @@ def construct_graph_for_tarjan(graph):
 	return result
 
 def solve_all():
+	complete = []
+	partial = []
 	for i in range(1,492):
 		filename = "phase1-processed/"+str(i)+".in"
 		print filename
 		g = construct_graph(filename)
-		instance_solver(g)
+		solution,flag = instance_solver(g)
+		if flag ==1:
+			complete.append(i)
+		elif flag == 2:
+			partial.append(i)
+		output(solution,i,flag)
+
+	f = open("temp_results","w")
+	f.write("complete:\n")
+	f.write(str(complete)+"\n")
+	f.write("partially done:\n")
+	f.write(str(partial)+"\n")
+	f.close()
 
 def instance_solver(graph):
 	original_vertices_no = len(graph.nodes())
 	solution_set = []
+	flag = 999
 	graph,solution_set,largest_scc_size = scc_screening(graph,solution_set)
 	# children_cycles = find_all_children_cycle(graph)
 	# children_cycles = delete_duplicate_cycle(children_cycles)
@@ -93,7 +128,11 @@ def instance_solver(graph):
 	print("largest scc left "+str(largest_scc_size))
 	print "out of " +str(original_vertices_no) +" vertices, " + str(len(graph.nodes()))+" vertices uncovered "
 	print "number of edges left " + str(nx.number_of_edges(graph))
-	return solution_set
+	if len(graph.nodes()) == 0:
+		flag = 1
+	elif len(graph.nodes())/float(original_vertices_no) < 0.03:
+		flag = 2
+	return solution_set,flag
 
 def one_cycle_from_most_constricted(graph):
 	pq = sort_v_according_to_indegree(graph)
