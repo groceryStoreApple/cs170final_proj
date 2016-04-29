@@ -33,6 +33,17 @@ def construct_graph(instance_name):
 	f.close()
 	return G
 
+def cycle_checker(graph, cycle):
+	cycle_len = len(cycle)
+	for i in range(cycle_len-1):
+		if not graph.has_edge(cycle[i],cycle[i+1]):
+			print "nooooooooooooooooooooooooooooooooo"
+			return False
+	if graph.has_edge(cycle[-1],cycle[0]):
+		return True
+	else:
+		return False
+
 def construct_graph_for_tarjan(graph):
 	result = {}
 	num_of_vertex = 0
@@ -50,34 +61,37 @@ def solve_all():
 		instance_solver(g)
 
 def instance_solver(graph):
+	original_vertices_no = len(graph.nodes())
 	solution_set = []
 	graph,solution_set,largest_scc_size = scc_screening(graph,solution_set)
-	children_cycles = find_all_children_cycle(graph)
-	children_cycles = delete_duplicate_cycle(children_cycles)
-	children_cycles,_ = find_unique_cycle(children_cycles,0)
-	print "children_cycles are " 
-	print children_cycles
-	for cycle in children_cycles:
-		if cycle:
-			solution_set.append(cycle)
-			for item in cycle:
-				graph.remove_node(item)
+	# children_cycles = find_all_children_cycle(graph)
+	# children_cycles = delete_duplicate_cycle(children_cycles)
+	# children_cycles,_ = find_unique_cycle(children_cycles,0)
+	# print "children_cycles are " 
+	# print children_cycles
+	# for cycle in children_cycles:
+	# 	if cycle:
+	# 		solution_set.append(cycle)
+	# 		for item in cycle:
+	# 			graph.remove_node(item)
 
-	while largest_scc_size>5:
+	cycle = one_cycle_from_most_constricted(graph)
+	if cycle and cycle_checker(graph,cycle):
+		print cycle
+		solution_set.append(cycle)
+		graph.remove_nodes_from(cycle)
+	graph,solution_set,_ = scc_screening(graph,solution_set)
+
+	while cycle:
 		cycle = one_cycle_from_most_constricted(graph)
-		if cycle:
-			print cycle
+		if cycle and cycle_checker(graph,cycle):
 			solution_set.append(cycle)
 			graph.remove_nodes_from(cycle)
-		last_largest_scc_size = largest_scc_size
 		graph,solution_set,largest_scc_size = scc_screening(graph,solution_set)
 		
-		print "number of vertices uncovered " + str(len(graph.nodes()))
-		if largest_scc_size == last_largest_scc_size:
-			break
 
 	print("largest scc left "+str(largest_scc_size))
-	print "number of vertices uncovered " + str(len(graph.nodes()))
+	print "out of " +str(original_vertices_no) +" vertices, " + str(len(graph.nodes()))+" vertices uncovered "
 	print "number of edges left " + str(nx.number_of_edges(graph))
 	return solution_set
 
@@ -85,12 +99,12 @@ def one_cycle_from_most_constricted(graph):
 	pq = sort_v_according_to_indegree(graph)
 	cycle = None
 	while not cycle:
-		if not pq.is_empty():
+		try:
 			curr_v = pq.pop()
-			cycle = find_one_cycle_length_five(graph,curr_v,curr_v,5)
-		else:
-			print "not more vertices"
-			return cycle
+		except:
+			break
+		cycle = find_one_cycle(graph,curr_v,curr_v,5)
+
 	return cycle
 
 def sort_v_according_to_indegree(graph):
@@ -105,7 +119,7 @@ def scc_screening(graph,solution_set):
 	if new_solutions:
 		for new_solution in new_solutions:
 			solution_set.append(new_solution)
-	print("#scc " + str(len(graph)))
+	# print("#scc " + str(len(graph)))
 	return graph, solution_set,largest_scc_size
 
 def tarjan_algo(graph):
@@ -129,6 +143,23 @@ def tarjan_algo(graph):
 		print "solutions from tarjan screening" + str(solution_set)
 	return graph, solution_set, largest_scc_size
 
+def find_one_cycle(graph,source,end,depth, path = []):
+	if depth == 0:
+		return None
+	path = path + [source]
+	for v in graph.neighbors(source):
+		try:
+			assert graph.has_edge(source,v)
+		except AssertionError:
+			print "oh shiiiiiiiiiiiit"
+			print v,source
+			break
+		if v == end:
+			return path
+		elif not v in path:
+			return find_one_cycle(graph,v,end,depth -1,path)
+
+
 def find_all_children_cycle(graph):
 	vertices = graph.nodes()
 	cycles = []
@@ -150,46 +181,7 @@ def find_all_cycle(graph):
 			cycles.append(cycle)
 	return cycles
 
-def find_one_cycle_length_five(graph,start,end,depth,path=[]):
-	if depth == 0:
-		if start == end:
-			return path
-		return None
-	path = path + [start]
-	for v in nx.all_neighbors(graph,start):
-		if not graph.node[v]['child']:
-			continue
-		elif v not in path:
-			return find_one_cycle(graph,v,end,depth-1,path)
 
-def find_one_cycle(graph, start, end, depth,path=[]):
-	if depth == 0:
-		return None
-	path = path + [start]
-	for v in nx.all_neighbors(graph,start):
-		# if not graph.node[v]['child']:
-		# 	continue
-		if v == end:
-			return path
-		elif v not in path:
-			return find_one_cycle(graph,v,end,depth-1,path)
-
-def find_cycle(graph, start, end, depth, path=[]):
-	if depth == 0:
-		return None
-	path = path + [start]
-	paths = []
-	for v in nx.all_neighbors(graph,start):
-		if not graph.node[v]['child']:
-			continue
-		elif v == end:
-			# paths.append(path)
-			return [path]
-		elif v not in path:
-			newpaths = find_cycle(graph,v,end,depth-1,path)
-			if newpaths:
-				paths += newpaths
-	return paths
 
 def find_unique_cycle(cycles, k):
 	unique_cycles = []
@@ -260,9 +252,11 @@ def naive_greedy(graph):
 	# 	return
 
 def main():
-	# solve_all()
 	g = construct_graph("instances/1.in")
 	# print nx.number_of_edges(g)
+	solve_all()
+	# g = construct_graph("instances/1.in")
+	# print nx.cycle_basis(g)
 	# nx.draw(g)
 	# naive_greedy(g)
 	# solutions =  instance_solver(g)
@@ -291,9 +285,6 @@ class PriorityQueue:
     def __init__(self):
         self._queue = []
         self._index = 0
-
-    def is_empty(self):
-    	return len(self._queue) == 0
 
     def push(self, item, priority):
         heapq.heappush(self._queue, (-priority, self._index, item))
