@@ -78,7 +78,7 @@ def instance_solver(graph):
 
 	print("largest scc left "+str(largest_scc_size))
 	print "number of vertices uncovered " + str(len(graph.nodes()))
-
+	print "number of edges left " + str(nx.number_of_edges(graph))
 	return solution_set
 
 def one_cycle_from_most_constricted(graph):
@@ -260,17 +260,18 @@ def naive_greedy(graph):
 	# 	return
 
 def main():
-	g = construct_graph("instances/1.in")
+	solve_all()
+	# g = construct_graph("instances/1.in")
 	# print nx.number_of_edges(g)
 	# nx.draw(g)
 	# naive_greedy(g)
-	solutions =  instance_solver(g)
-	ver = set()
-	for sol in solutions:
-		if sol:
-			for v in sol:
-				ver.add(v)
-	print len(ver)
+	# solutions =  instance_solver(g)
+	# ver = set()
+	# for sol in solutions:
+	# 	if sol:
+	# 		for v in sol:
+	# 			ver.add(v)
+	# print len(ver)
 	# instance_solver(g)
 	# new_g, sccs, size = scc_screening(g, [])
 	# cycles = find_all_children_cycle(new_g)
