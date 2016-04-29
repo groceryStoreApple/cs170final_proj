@@ -250,7 +250,7 @@ def naive_greedy(graph):
 			solution_set.append(cycle)
 			for item in cycle:
 				graph.remove_node(item)
-	
+
 	cycles = find_all_cycle(graph)
 	# unique_cycles, remain_cycles = find_unique_cycle(cycles)
 	# for c in unique_cycles:
@@ -261,7 +261,7 @@ def naive_greedy(graph):
 
 def main():
 	g = construct_graph("instances/1.in")
-	print nx.number_of_edges(g)
+	# print nx.number_of_edges(g)
 	# nx.draw(g)
 	# naive_greedy(g)
 	solutions =  instance_solver(g)
@@ -271,6 +271,7 @@ def main():
 			for v in sol:
 				ver.add(v)
 	print len(ver)
+	# instance_solver(g)
 	# new_g, sccs, size = scc_screening(g, [])
 	# cycles = find_all_children_cycle(new_g)
 	# print(cycles)
@@ -282,7 +283,7 @@ def main():
 	# 	filename = "phase1-processed/"+str(i)+".in"
 	# 	print filename
 	# 	g = construct_graph(filename)
-	# solve_all()
+	# instance_solver(g)
 		
 
 class PriorityQueue:
