@@ -129,12 +129,16 @@ def tarjan_algo(graph):
 	dead_people = []
 	solution_set = []
 	for scc in sccs:
+		if len(scc) == 0:
+			continue
 		if len(scc) > largest_scc_size:
 			largest_scc_size = len(scc)
 		if len(scc) == 1:
 			dead_people.append(scc[0])
 		elif len(scc)<6:
-			solution_set.append(scc)#####order the vertices.
+			scc = scc_solution_formatter(graph,scc)
+			if scc and cycle_checker(graph,scc):
+				solution_set.append(scc)#####order the vertices.
 	for person in dead_people:
 		graph.remove_node(person)
 	for scc in solution_set:
@@ -142,6 +146,19 @@ def tarjan_algo(graph):
 	if solution_set:
 		print "solutions from tarjan screening" + str(solution_set)
 	return graph, solution_set, largest_scc_size
+
+def scc_solution_formatter(graph,scc):
+	curr_v = scc.pop()	
+	return scc_formatter_helper(graph,curr_v,scc,[curr_v],len(scc))
+
+def scc_formatter_helper(graph,start, scc, path,remaining):
+	if remaining == 0:
+		return path
+	for n in graph.neighbors(start):
+		if not n in path and n in scc:
+			path += [n]
+			return scc_formatter_helper(graph,n,scc,path,remaining -1)
+
 
 def find_one_cycle(graph,source,end,depth, path = []):
 	if depth == 0:
