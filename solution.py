@@ -42,15 +42,25 @@ def output(solution,inst_num,flag):
 		filename = "partial/inst" + str(inst_num)+".out"
 		output_func(solution,filename)
 
-def output_func(solution,filename):
-	f = open(filename, 'w')
-	for s in solution:
-		string = ""
-		for num in s:
-			string += str(num) + " "
-		string = string[:-1]
-		string += "\n"
-		f.write(string)
+
+def output_func(solutions,filename=""):
+	print("hiih")
+	f = open("final.out", 'w')
+	for sol in solutions:
+		for s in sol:
+			string = ""
+			for num in s:
+				string += str(num) + " "
+			string = string[:-1]
+			string += "; "
+			f.write(string)
+		f.write("\n")
+	f.close()
+
+def output_per(pers,filename=""):
+	f = open("per.out", 'w')
+	for p in pers:
+		f.write(str(p)+"\n")
 	f.close()
 
 def cycle_checker(graph, cycle):
@@ -74,28 +84,36 @@ def construct_graph_for_tarjan(graph):
 	return result
 
 def solve_all():
-	complete = []
-	partial = []
-	for i in range(1,492):
+	# complete = []
+	# partial = []
+	solutions = []
+	pers = []
+	for i in range(1,5):
 		filename = "phase1-processed/"+str(i)+".in"
 		print filename
 		g = construct_graph(filename)
-		solution,flag = instance_solver(g)
-		if flag ==1:
-			complete.append(i)
-		elif flag == 2:
-			partial.append(i)
-		output(solution,i,flag)
+		solution,flag, per = instance_solver(g)
+		# output_func(solution, "")
+		# output_per(per, "")
+		# if flag ==1:
+		# 	complete.append(i)
+		# elif flag == 2:
+		# 	partial.append(i)
+		# output(solution,i,flag)
+		solutions.append(solution)
+		pers.append(per)
+	return solutions, pers
 
-	f = open("temp_results","w")
-	f.write("complete:\n")
-	f.write(str(complete)+"\n")
-	f.write("partially done:\n")
-	f.write(str(partial)+"\n")
-	f.close()
+	# f = open("temp_results","w")
+	# f.write("complete:\n")
+	# f.write(str(complete)+"\n")
+	# f.write("partially done:\n")
+	# f.write(str(partial)+"\n")
+	# f.close()
 
 def instance_solver(graph):
 	original_vertices_no = len(graph.nodes())
+	original_edges_no = len(graph.edges())
 	solution_set = []
 	flag = 999
 	graph,solution_set,largest_scc_size = scc_screening(graph,solution_set)
@@ -144,7 +162,9 @@ def instance_solver(graph):
 		flag = 1
 	elif len(final_sol[2].nodes())/float(original_vertices_no) < 0.03:
 		flag = 2
-	return final_sol[1],flag
+	return final_sol[1],flag, "% = " + str(round(len(final_sol[2].nodes())/float(original_vertices_no), 2)) + "; #uncovered = " + str(len(final_sol[2].nodes())) + "; #vertex = " + str(original_vertices_no) + "; #edges = " + str(original_edges_no)
+
+
 
 def one_cycle_from_most_constricted(graph,function):
 	pq = function(graph)
@@ -208,8 +228,8 @@ def tarjan_algo(graph):
 		graph.remove_node(person)
 	for scc in solution_set:
 		graph.remove_nodes_from(scc)
-	if solution_set:
-		print "solutions from tarjan screening" + str(solution_set)
+	# if solution_set:
+		# print "solutions from tarjan screening" + str(solution_set)
 	return graph, solution_set, largest_scc_size
 
 def scc_solution_formatter(graph,scc):
@@ -259,11 +279,19 @@ def find_all_cycle(graph):
 	for vertex in vertices:
 		cycle = find_one_cycle(graph,vertex,vertex,5)
 		if cycle:
-			print cycle
-			cycles.append(cycle)
+			if cycle_checker(graph, cycle):
+				# print cycle
+				cycles.append(cycle)
+			else:
+				print("fuckkkk")
 	return cycles
 
-
+# def find_all_cycle(graph):
+#  	graph_gen = nx.simple_cycles(graph)
+#  	while (1):
+#  		cycle = graph_gen.next()
+#  		if len(cycle) <6:
+#  			print cycle
 
 def find_unique_cycle(cycles, k):
 	unique_cycles = []
@@ -334,9 +362,11 @@ def naive_greedy(graph):
 	# 	return
 
 def main():
-	g = construct_graph("instances/1.in")
+	solutions, pers = solve_all()
+	output_func(solutions)
+	output_per(pers)
+	# g = construct_graph("instances/1.in")
 	# print nx.number_of_edges(g)
-	solve_all()
 	# g = construct_graph("instances/1.in")
 	# print nx.cycle_basis(g)
 	# nx.draw(g)
@@ -360,7 +390,17 @@ def main():
 	# 	filename = "phase1-processed/"+str(i)+".in"
 	# 	print filename
 	# 	g = construct_graph(filename)
-	instance_solver(g)
+	# instance_solver(g)
+
+
+	# g = construct_graph("phase1-processed/17.in")
+	# print(cycle_checker(g, [4, 5, 6, 7, 8]))
+	# print nx.number_of_edges(g)+nx.number_of_nodes(g)
+	# cycles = find_all_cycle(g)
+	# # cycles = delete_duplicate_cycle(cycles)
+	# for c in cycles:
+	# 	print c
+
 		
 
 class PriorityQueue:
