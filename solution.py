@@ -83,12 +83,12 @@ def construct_graph_for_tarjan(graph):
 	# print "there are " +str(num_of_vertex) + "vertices"
 	return result
 
-def solve_all():
+def solve_all(x, y):
 	# complete = []
 	# partial = []
 	solutions = []
 	pers = []
-	for i in range(1,5):
+	for i in range(x,y):
 		filename = "phase1-processed/"+str(i)+".in"
 		print filename
 		g = construct_graph(filename)
@@ -114,9 +114,9 @@ def solve_all():
 def instance_solver(graph):
 	original_vertices_no = len(graph.nodes())
 	original_edges_no = len(graph.edges())
-	solution_set = []
+	final_solution_set = []
 	flag = 999
-	graph,solution_set,largest_scc_size = scc_screening(graph,solution_set)
+	graph,final_solution_set,largest_scc_size = scc_screening(graph,final_solution_set)
 	# children_cycles = find_all_children_cycle(graph)
 	# children_cycles = delete_duplicate_cycle(children_cycles)
 	# children_cycles,_ = find_unique_cycle(children_cycles,0)
@@ -128,8 +128,9 @@ def instance_solver(graph):
 	# 		for item in cycle:
 	# 			graph.remove_node(item)
 	functions = [sort_v_according_to_indegree,sort_v_according_to_outdegree,sort_v_according_to_connectedness]
-	solutions = ()
+	solutions = []
 	for function in functions:
+		solution_set = final_solution_set[:]
 		graph_cp = graph.copy()
 		cycle = one_cycle_from_most_constricted(graph_cp,function)
 		if cycle and cycle_checker(graph_cp,cycle):
@@ -139,12 +140,12 @@ def instance_solver(graph):
 		graph_cp,solution_set,_ = scc_screening(graph_cp,solution_set)
 
 		while cycle:
-			cycle = one_cycle_from_most_constricted(graph_cp)
+			cycle = one_cycle_from_most_constricted(graph_cp, function)
 			if cycle and cycle_checker(graph_cp,cycle):
 				solution_set.append(cycle)
 				graph_cp.remove_nodes_from(cycle)
 			graph_cp,solution_set,largest_scc_size = scc_screening(graph_cp,solution_set)
-		solution = [len(graph_cp.nodes()),solution_set,graph_cp]
+		solution = [len(graph_cp.nodes()),solution_set,graph_cp, function]
 		solutions.append(tuple(solution))
 
 	v_left = 999999999
@@ -156,13 +157,18 @@ def instance_solver(graph):
 
 	print "out of " +str(original_vertices_no) +" vertices, " + str(len(final_sol[2].nodes()))+" vertices uncovered "
 	print "number of edges left " + str(nx.number_of_edges(final_sol[2]))
+	print "solution comes from " + str(final_sol[3])
 	
 
 	if len(final_sol[2].nodes()) == 0:
 		flag = 1
 	elif len(final_sol[2].nodes())/float(original_vertices_no) < 0.03:
 		flag = 2
+<<<<<<< HEAD
 	return final_sol[1],flag, "% = " + str(round(len(final_sol[2].nodes())/float(original_vertices_no), 2)) + "; #uncovered = " + str(len(final_sol[2].nodes())) + "; #vertex = " + str(original_vertices_no) + "; #edges = " + str(original_edges_no)
+=======
+	return final_sol[1],flag, "% = " + str(round(len(final_sol[2].nodes())/float(original_vertices_no), 2)) + "; #uncovered = " + str(len(final_sol[2].nodes())) + "; #vertex = " + str(original_vertices_no) + "; #edges = " + str(original_edges_no) + "; from " + str(final_sol[3])
+>>>>>>> 37708dceba9f359d88d6017c21fec4ecda9a573e
 
 
 
@@ -196,7 +202,7 @@ def sort_v_according_to_connectedness(graph):
 	pq = PriorityQueue()
 	for v in graph.nodes():
 		degree = graph.degree(v)
-		pq.push(v,-out_degree)
+		pq.push(v,-degree)
 	return pq
 
 def scc_screening(graph,solution_set):
@@ -362,10 +368,13 @@ def naive_greedy(graph):
 	# 	return
 
 def main():
-	solutions, pers = solve_all()
+	solutions, pers = solve_all(1, 250)
 	output_func(solutions)
 	output_per(pers)
-	# g = construct_graph("instances/1.in")
+
+	# g = construct_graph("instances/2.in")
+	# instance_solver(g)
+
 	# print nx.number_of_edges(g)
 	# g = construct_graph("instances/1.in")
 	# print nx.cycle_basis(g)
