@@ -88,7 +88,7 @@ def solve_all():
 	# partial = []
 	solutions = []
 	pers = []
-	for i in range(1,5):
+	for i in range(1,250):
 		filename = "phase1-processed/"+str(i)+".in"
 		print filename
 		g = construct_graph(filename)
