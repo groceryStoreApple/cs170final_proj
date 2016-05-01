@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import tarjan as tj
 import heapq
+import output_validator as ov
 
 
 def construct_graph(instance_name):
@@ -47,14 +48,18 @@ def output_func(solutions,filename=""):
 	print("hiih")
 	f = open("final.out", 'w')
 	for sol in solutions:
-		for s in sol:
+		if not sol:
+			string = "None"
+		else:
 			string = ""
-			for num in s:
-				string += str(num) + " "
+			for s in sol:
+				for num in s:
+					string += str(num) + " "
+				string = string[:-1]
+				string += ";"
+		if not string == "None":
 			string = string[:-1]
-			if string == "":
-				string = "None"
-			f.write(string)
+		f.write(string)
 		f.write("\n")
 	f.close()
 
@@ -99,7 +104,7 @@ def solve_all():
 	# partial = []
 	solutions = []
 	pers = []
-	for i in range(4,5):
+	for i in range(1,493):
 		filename = "phase1-processed/"+str(i)+".in"
 		print filename
 		solution,flag, per = instance_solver(filename)
