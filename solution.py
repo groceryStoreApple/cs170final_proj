@@ -76,7 +76,7 @@ def construct_graph_for_tarjan(graph):
 def solve_all():
 	complete = []
 	partial = []
-	for i in range(1,492):
+	for i in range(492,493):##492
 		filename = "phase1-processed/"+str(i)+".in"
 		print filename
 		g = construct_graph(filename)
@@ -87,7 +87,7 @@ def solve_all():
 			partial.append(i)
 		output(solution,i,flag)
 
-	f = open("temp_results","w")
+	f = open("temp_results","a+")
 	f.write("complete:\n")
 	f.write(str(complete)+"\n")
 	f.write("partially done:\n")
