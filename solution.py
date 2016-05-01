@@ -349,19 +349,120 @@ def find_one_children_cycle(graph,source,end,depth, path = []):
 			return find_one_children_cycle(graph,v,end,depth -1,path)
 
 
-def find_all_cycle(graph):
-	vertices = graph.nodes()
-	cycles = []
-	for vertex in vertices:
-		cycle = find_one_cycle(graph,vertex,vertex,5)
-		if cycle:
-			if cycle_checker(graph, cycle):
-				# print cycle
-				cycles.append(cycle)
-			else:
-				print("fuckkkk")
+# def find_all_cycle(graph):
+# 	vertices = graph.nodes()
+# 	cycles = []
+# 	for vertex in vertices:
+# 		cycle = find_one_cycle(graph,vertex,vertex,5)
+# 		if cycle:
+# 			if cycle_checker(graph, cycle):
+# 				# print cycle
+# 				cycles.append(cycle)
+# 			else:
+# 				print("fuckkkk")
+# 	return cycles
+
+def read_stats():
+	f = open("per.out")
+	content = [line.rstrip('\n') for line in f]
+	solved = 0
+	almost_solved = 0
+	i = 1
+	unsolved_instance = []
+	for c in content:
+		info = c.split(';')
+		flag = int(info[0])
+		if flag == 1 or flag == 3:
+			solved += 1
+		elif flag == 2 or flag ==4:
+			almost_solved += 1
+		unsolved_instance.append(i)
+		i +=1
+	print "num of instances solved: " + str(solved)
+	print "num of instances almost solved: " + str(almost_solved)
+	return unsolved_instance
+
+def compare_two_solution(per_file_1,per_file_2):
+	f1 = open(per_file_1)
+	f2 = open(per_file_2)
+	content1 = [line.rstrip('\n') for line in f1]
+	content2 = [line.rstrip('\n') for line in f2]
+	improvement = 0
+	assert len(content1) == len(content2)
+	choice =[]##0 for staying 1 for change to solution 2.
+	for i in range(len(content1)):
+		choice.append(0)
+	for i in range(len(content1)):
+		string1 = content1[i]
+		string2 = content2[i]
+		info1 = string1.split(';') 
+		info2 = string2.split(';')
+		score1 = info1[-1]
+		score2 = info2[-1]
+		score1 = int(score1.split(' ')[2].strip(','))
+		score2 = int(score2.split(' ')[2].strip(','))
+		if score2 < score1:
+			choice[i] = 1
+			improvement += score1 - score2
+	f1.close()
+	f2.close()
+	return choice,improvement
+
+def construct_solution(choice,solution1,solution2):
+	f = open("new_final.out", 'w')
+	sol1 = open(solution1)
+	sol2 = open(solution2)
+	content1 = [line for line in sol1]
+	content2 = [line for line in sol2]
+	for i in range(len(choice)):
+		string = content1[i]
+		if choice[i]:
+			string = content2[i]
+		if not validity_check(i+1,string):
+			sol1.close()
+			sol2.close()
+			f.close()
+			return 0
+		f.write(string)
+
+	sol1.close()
+	sol2.close()
+	f.close()
+	return 1
+
+def string_sol_to_sol_set(string):
+	if string == "None\n":
+		return None
+	cycles =[]
+	strings = string.strip('\n').split(';')
+	for string in strings:
+		cycle = [int(n) for n in string.split(' ')]
+		cycles.append(cycle)
 	return cycles
 
+def validity_check(index,string):
+	graph = construct_graph("instances/"+str(index)+".in")
+	solution_set = string_sol_to_sol_set(string)
+	if not solution_set:
+		return True
+	number_of_nodes = len(graph.nodes())
+	nodes_vector = []
+	for i in range(number_of_nodes):
+		nodes_vector.append(0)
+	for cycle in solution_set:
+		for v in cycle:
+			if nodes_vector[v]:
+				return False
+			else:
+				nodes_vector[v] = 1
+		if not cycle_checker(graph,cycle):
+			return False
+	return True
+
+def iterative_improvement(per1,per2,solution1,solution2):
+	choice, imprv= compare_two_solution(per1,per2)
+	construct_solution(choice,solution1,solution2)
+	print "improvement of " + str(imprv)
 
 def find_unique_cycle(cycles, k):
 	unique_cycles = []
@@ -432,9 +533,12 @@ def naive_greedy(graph):
 	# 	return
 
 def main():
-	solutions, pers = solve_all()
-	output_func(solutions)
-	output_per(pers)
+	# solutions, pers = solve_all()
+	# output_func(solutions)
+	# output_per(pers)
+	# print read_stats()
+	# compare_two_solution('per.out','per.out')
+	iterative_improvement("per.out","per.out","final.out","final.out")
 	# g = construct_graph("instances/1.in")
 	# print nx.number_of_edges(g)
 	# g = construct_graph("instances/1.in")
