@@ -52,7 +52,8 @@ def output_func(solutions,filename=""):
 			for num in s:
 				string += str(num) + " "
 			string = string[:-1]
-			string += "; "
+			if string == "":
+				string = "None"
 			f.write(string)
 		f.write("\n")
 	f.close()
