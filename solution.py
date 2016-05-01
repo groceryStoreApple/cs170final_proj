@@ -42,15 +42,26 @@ def output(solution,inst_num,flag):
 		filename = "partial/inst" + str(inst_num)+".out"
 		output_func(solution,filename)
 
-def output_func(solution,filename):
-	f = open(filename, 'w')
-	for s in solution:
-		string = ""
-		for num in s:
-			string += str(num) + " "
-		string = string[:-1]
-		string += "\n"
-		f.write(string)
+
+def output_func(solutions,filename=""):
+	print("hiih")
+	f = open("final.out", 'w')
+	for sol in solutions:
+		for s in sol:
+			string = ""
+			for num in s:
+				string += str(num) + " "
+			string = string[:-1]
+			if string == "":
+				string = "None"
+			f.write(string)
+		f.write("\n")
+	f.close()
+
+def output_per(pers,filename=""):
+	f = open("per.out", 'w')
+	for p in pers:
+		f.write(str(p)+"\n")
 	f.close()
 
 def cycle_checker(graph, cycle):
@@ -64,6 +75,15 @@ def cycle_checker(graph, cycle):
 	else:
 		return False
 
+def find_penalty(graph):
+	penalty =0
+	for v in graph.nodes():
+		if graph.node[v]['child']:
+			penalty += 2;
+		else:
+			penalty += 1;
+	return penalty
+
 def construct_graph_for_tarjan(graph):
 	result = {}
 	num_of_vertex = 0
@@ -74,30 +94,57 @@ def construct_graph_for_tarjan(graph):
 	return result
 
 def solve_all():
-	complete = []
-	partial = []
-	for i in range(492,493):##492
+
+	# complete = []
+	# partial = []
+	solutions = []
+	pers = []
+	for i in range(4,5):
 		filename = "phase1-processed/"+str(i)+".in"
 		print filename
-		g = construct_graph(filename)
-		solution,flag = instance_solver(g)
-		if flag ==1:
-			complete.append(i)
-		elif flag == 2:
-			partial.append(i)
-		output(solution,i,flag)
+		solution,flag, per = instance_solver(filename)
+		# output_func(solution, "")
+		# output_per(per, "")
+		# if flag ==1:
+		# 	complete.append(i)
+		# elif flag == 2:
+		# 	partial.append(i)
+		# output(solution,i,flag)
+		solutions.append(solution)
+		pers.append(per)
+	return solutions, pers
 
-	f = open("temp_results","a+")
-	f.write("complete:\n")
-	f.write(str(complete)+"\n")
-	f.write("partially done:\n")
-	f.write(str(partial)+"\n")
-	f.close()
+	# f = open("temp_results","w")
+	# f.write("complete:\n")
+	# f.write(str(complete)+"\n")
+	# f.write("partially done:\n")
+	# f.write(str(partial)+"\n")
+	# f.close()
 
-def instance_solver(graph):
+def instance_solver(filename):
+	funcs = [one_cycle_from_most_constricted_indegree,one_cycle_from_most_constricted_outdegree,one_cycle_from_most_constricted_degree]
+	i = 600
+	ret_sol = None
+	ret_flag = None
+	ret_msg = None
+	for func in funcs:
+		graph = construct_graph(filename)
+		curr_sol, flag, num_uncovered,msg = instance_solver_with(graph,func)
+		if num_uncovered<i:
+			print "smaller"
+			ret_sol = curr_sol
+			ret_flag = flag
+			ret_msg = msg
+	return ret_sol,ret_flag,ret_msg
+
+
+
+def instance_solver_with(graph,function):
 	original_vertices_no = len(graph.nodes())
+	original_edges_no = len(graph.edges())
+	original_penalty = find_penalty(graph)
 	solution_set = []
-	flag = 999
+	flag = 9
 	graph,solution_set,largest_scc_size = scc_screening(graph,solution_set)
 	# children_cycles = find_all_children_cycle(graph)
 	# children_cycles = delete_duplicate_cycle(children_cycles)
@@ -110,32 +157,69 @@ def instance_solver(graph):
 	# 		for item in cycle:
 	# 			graph.remove_node(item)
 
-	cycle = one_cycle_from_most_constricted(graph)
+	cycle = function(graph)
 	if cycle and cycle_checker(graph,cycle):
-		print cycle
+		# print cycle
 		solution_set.append(cycle)
 		graph.remove_nodes_from(cycle)
 	graph,solution_set,_ = scc_screening(graph,solution_set)
 
 	while cycle:
-		cycle = one_cycle_from_most_constricted(graph)
+		cycle = function(graph)
 		if cycle and cycle_checker(graph,cycle):
 			solution_set.append(cycle)
 			graph.remove_nodes_from(cycle)
 		graph,solution_set,largest_scc_size = scc_screening(graph,solution_set)
 		
 
-	print("largest scc left "+str(largest_scc_size))
+	# print("largest scc left "+str(largest_scc_size))
+	print "using function" + str(function)
 	print "out of " +str(original_vertices_no) +" vertices, " + str(len(graph.nodes()))+" vertices uncovered "
 	print "number of edges left " + str(nx.number_of_edges(graph))
 	if len(graph.nodes()) == 0:
-		flag = 1
+		flag = 1 ##complete
 	elif len(graph.nodes())/float(original_vertices_no) < 0.03:
-		flag = 2
-	return solution_set,flag
+		flag = 2 ##almost complete
+	elif len(graph.nodes())/float(original_vertices_no) == 1:
+		flag = 3 ##no cycle
+	elif len(graph.nodes())/float(original_vertices_no) > 0.95:
+		flag = 4 ##very few cycle
+	else:
+		flag = 9
 
-def one_cycle_from_most_constricted(graph):
+	msg = str(flag) + "; " + str(len(graph.nodes())) + "% = " + str(round(len(graph.nodes())/float(original_vertices_no), 2))
+	msg += "; #uncovered = " + str(len(graph.nodes())) 
+	msg += "; #vertex = " + str(original_vertices_no) 
+	msg += "; #edges = " + str(original_edges_no)
+	msg += ";penalty is " + str(find_penalty(graph)) + ", down from " + str(original_penalty)
+	return solution_set,flag,len(graph.nodes()) , msg
+
+def one_cycle_from_most_constricted_indegree(graph):
 	pq = sort_v_according_to_indegree(graph)
+	cycle = None
+	while not cycle:
+		try:
+			curr_v = pq.pop()
+		except:
+			break
+		cycle = find_one_cycle(graph,curr_v,curr_v,5)
+
+	return cycle
+
+def one_cycle_from_most_constricted_outdegree(graph):
+	pq = sort_v_according_to_outdegree(graph)
+	cycle = None
+	while not cycle:
+		try:
+			curr_v = pq.pop()
+		except:
+			break
+		cycle = find_one_cycle(graph,curr_v,curr_v,5)
+
+	return cycle
+
+def one_cycle_from_most_constricted_degree(graph):
+	pq = sort_v_according_to_connectedness(graph)
 	cycle = None
 	while not cycle:
 		try:
@@ -151,6 +235,20 @@ def sort_v_according_to_indegree(graph):
 	for v in graph.nodes():
 		in_degree = graph.in_degree(v)
 		pq.push(v,-in_degree)
+	return pq
+
+def sort_v_according_to_outdegree(graph):
+	pq = PriorityQueue()
+	for v in graph.nodes():
+		out_degree = graph.out_degree(v)
+		pq.push(v,-out_degree)
+	return pq
+
+def sort_v_according_to_connectedness(graph):
+	pq = PriorityQueue()
+	for v in graph.nodes():
+		degree = graph.degree(v)
+		pq.push(v,-degree)
 	return pq
 
 def scc_screening(graph,solution_set):
@@ -182,8 +280,8 @@ def tarjan_algo(graph):
 		graph.remove_node(person)
 	for scc in solution_set:
 		graph.remove_nodes_from(scc)
-	if solution_set:
-		print "solutions from tarjan screening" + str(solution_set)
+	# if solution_set:
+		# print "solutions from tarjan screening" + str(solution_set)
 	return graph, solution_set, largest_scc_size
 
 def scc_solution_formatter(graph,scc):
@@ -227,16 +325,37 @@ def find_all_children_cycle(graph):
 				cycles.append(cycle)
 	return cycles
 
+def find_one_children_cycle(graph,source,end,depth, path = []):
+	if depth == 0:
+		return None
+	path = path + [source]
+	for v in graph.neighbors(source):
+		if not graph.node[v]['child']:
+			continue
+		try:
+			assert graph.has_edge(source,v)
+		except AssertionError:
+			print "oh shiiiiiiiiiiiit"
+			print v,source
+			break
+		if v == end:
+			return path
+		elif not v in path:
+			return find_one_children_cycle(graph,v,end,depth -1,path)
+
+
 def find_all_cycle(graph):
 	vertices = graph.nodes()
 	cycles = []
 	for vertex in vertices:
 		cycle = find_one_cycle(graph,vertex,vertex,5)
 		if cycle:
-			print cycle
-			cycles.append(cycle)
+			if cycle_checker(graph, cycle):
+				# print cycle
+				cycles.append(cycle)
+			else:
+				print("fuckkkk")
 	return cycles
-
 
 
 def find_unique_cycle(cycles, k):
@@ -308,7 +427,11 @@ def naive_greedy(graph):
 	# 	return
 
 def main():
-	solve_all()
+	solutions, pers = solve_all()
+	output_func(solutions)
+	output_per(pers)
+	# g = construct_graph("instances/1.in")
+	# print nx.number_of_edges(g)
 	# g = construct_graph("instances/1.in")
 	# print nx.cycle_basis(g)
 	# nx.draw(g)
@@ -333,6 +456,16 @@ def main():
 	# 	print filename
 	# 	g = construct_graph(filename)
 	# instance_solver(g)
+
+
+	# g = construct_graph("phase1-processed/17.in")
+	# print(cycle_checker(g, [4, 5, 6, 7, 8]))
+	# print nx.number_of_edges(g)+nx.number_of_nodes(g)
+	# cycles = find_all_cycle(g)
+	# # cycles = delete_duplicate_cycle(cycles)
+	# for c in cycles:
+	# 	print c
+
 		
 
 class PriorityQueue:
