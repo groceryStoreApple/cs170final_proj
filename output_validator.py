@@ -55,6 +55,7 @@ def processTest(line, N):
 		cycle = cycle.strip(' ').split(' ')
 		for v in cycle:
 			if not v.isdigit():
+				print(v)
 				return "Cycles must contain integers."
 			vertex = int(v)
 			if vertex < 0 or vertex >= N:
