@@ -112,6 +112,21 @@ def solve_all():
 	# f.close()
 
 def instance_solver(graph):
+	funcs = [one_cycle_from_most_constricted_indegree,one_cycle_from_most_constricted_outdegree,one_cycle_from_most_constricted_degree]
+	i = 999999
+	ret_sol = None
+	ret_flag = None
+	ret_msg = None
+	for func in funcs:
+		graph_cp = graph.copy()
+		curr_sol, flag, num_uncovered,msg = instance_solver_with(graph_cp,func)
+		if num_uncovered<i:
+			ret_sol = curr_sol
+			ret_flag = flag
+			ret_msg = msg
+	return ret_sol,ret_flag,ret_msg
+	
+def instance_solver_with(graph,function):
 	original_vertices_no = len(graph.nodes())
 	original_edges_no = len(graph.edges())
 	solution_set = []
@@ -128,7 +143,7 @@ def instance_solver(graph):
 	# 		for item in cycle:
 	# 			graph.remove_node(item)
 
-	cycle = one_cycle_from_most_constricted(graph)
+	cycle = function(graph)
 	if cycle and cycle_checker(graph,cycle):
 		# print cycle
 		solution_set.append(cycle)
@@ -136,7 +151,7 @@ def instance_solver(graph):
 	graph,solution_set,_ = scc_screening(graph,solution_set)
 
 	while cycle:
-		cycle = one_cycle_from_most_constricted(graph)
+		cycle = function(graph)
 		if cycle and cycle_checker(graph,cycle):
 			solution_set.append(cycle)
 			graph.remove_nodes_from(cycle)
@@ -144,17 +159,42 @@ def instance_solver(graph):
 		
 
 	# print("largest scc left "+str(largest_scc_size))
+	print "using function" + str(function)
 	print "out of " +str(original_vertices_no) +" vertices, " + str(len(graph.nodes()))+" vertices uncovered "
-	# print "number of edges left " + str(nx.number_of_edges(graph))
+	print "number of edges left " + str(nx.number_of_edges(graph))
 	if len(graph.nodes()) == 0:
 		flag = 1
 	elif len(graph.nodes())/float(original_vertices_no) < 0.03:
 		flag = 2
 
-	return solution_set,flag, "% = " + str(round(len(graph.nodes())/float(original_vertices_no), 2)) + "; #uncovered = " + str(len(graph.nodes())) + "; #vertex = " + str(original_vertices_no) + "; #edges = " + str(original_edges_no)
+	return solution_set,flag, str(len(graph.nodes())) "% = " + str(round(len(graph.nodes())/float(original_vertices_no), 2)) + "; #uncovered = " + str(len(graph.nodes())) + "; #vertex = " + str(original_vertices_no) + "; #edges = " + str(original_edges_no)
 
-def one_cycle_from_most_constricted(graph):
+def one_cycle_from_most_constricted_indegree(graph):
 	pq = sort_v_according_to_indegree(graph)
+	cycle = None
+	while not cycle:
+		try:
+			curr_v = pq.pop()
+		except:
+			break
+		cycle = find_one_cycle(graph,curr_v,curr_v,5)
+
+	return cycle
+
+def one_cycle_from_most_constricted_outdegree(graph):
+	pq = sort_v_according_to_outdegree(graph)
+	cycle = None
+	while not cycle:
+		try:
+			curr_v = pq.pop()
+		except:
+			break
+		cycle = find_one_cycle(graph,curr_v,curr_v,5)
+
+	return cycle
+
+def one_cycle_from_most_constricted_degree(graph):
+	pq = sort_v_according_to_connectedness(graph)
 	cycle = None
 	while not cycle:
 		try:
@@ -170,6 +210,20 @@ def sort_v_according_to_indegree(graph):
 	for v in graph.nodes():
 		in_degree = graph.in_degree(v)
 		pq.push(v,-in_degree)
+	return pq
+
+def sort_v_according_to_outdegree(graph):
+	pq = PriorityQueue()
+	for v in graph.nodes():
+		out_degree = graph.out_degree(v)
+		pq.push(v,-out_degree)
+	return pq
+
+def sort_v_according_to_connectedness(graph):
+	pq = PriorityQueue()
+	for v in graph.nodes():
+		degree = graph.degree(v)
+		pq.push(v,-degree)
 	return pq
 
 def scc_screening(graph,solution_set):
